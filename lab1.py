@@ -1,4 +1,3 @@
-import keyboard
 from pynput.keyboard import Listener, Key
 import os
 from random import randint
