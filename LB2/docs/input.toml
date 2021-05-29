@@ -1,0 +1,15 @@
+__type__ = "object"
+__class__ = "User"
+name = "Jonh Smith"
+adress = "New York"
+
+[func]
+__type__ = "function"
+name = "func"
+code = "    def func(self, arg1, arg2):\n        return arg1 + arg2\n"
+
+[l]
+__type__ = "function"
+code = "lambda x, y: x + y\n"
+
+[func.globals]

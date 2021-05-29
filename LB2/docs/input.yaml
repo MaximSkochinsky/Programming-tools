@@ -1,0 +1,14 @@
+__class__: User
+__type__: object
+adress: New York
+func:
+  __type__: function
+  code: "    def func(self, arg1, arg2):\n        return arg1 + arg2\n"
+  globals: {}
+  name: func
+l:
+  __type__: function
+  code: 'lambda x, y: x + y
+
+    '
+name: Jonh Smith
