@@ -16,7 +16,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
     telegram_users = db.relationship('TelegramUser', backref='user', lazy='dynamic')
-    token = db.Column(db.String)
+    token = db.Column(db.String(16))
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -30,14 +30,27 @@ class User(UserMixin, db.Model):
 
 class TelegramUser(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String)
-    last_name = db.Column(db.String)
-    username = db.Column(db.String)
+    first_name = db.Column(db.String(30))
+    last_name = db.Column(db.String(30))
+    username = db.Column(db.String(40))
     chat_id = db.Column(db.Integer)
     user_id = db.Column(db.Integer, ForeignKey('user.id'))
 
 
 class Client(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String)
-    last_name = db.Column(db.String)
+    first_name = db.Column(db.String(30))
+    last_name = db.Column(db.String(30))
+    agent_id = db.Column(db.Integer)
+
+
+class Meetings(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    manager_id = db.Column(db.Integer, ForeignKey('user.id'))
+    client_id = db.Column(db.Integer, ForeignKey('client.id'))
+    date = db.Column(db.String(50))
+    place = db.Column(db.String(50))
+    purpose = db.Column(db.String(100))
+
+
+

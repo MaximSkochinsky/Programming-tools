@@ -7,9 +7,9 @@ class Config(object):
     ENV = 'development'
     DEBUG = True
     SECRET_KEY = '0f0d3f0e75fce7017392388185a5f30c'
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'var/app.db')
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://maxim:Real280602@localhost/app'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    TELEGRAM_BOT = '1856901165:AAFH1W3Ilzx8gPeQSqE83L7oNmJx7ABicvo'
+    TELEGRAM_BOT = '1752651930:AAGKWH_sH2I3HxYdjC2guR3dyBGub6NPU8U'
 
 
 class ProductionConfig(Config):

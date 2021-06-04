@@ -1,4 +1,5 @@
 import click
+import secrets
 from flask.cli import AppGroup
 
 from app import app, db, bot
@@ -20,6 +21,8 @@ def create_user():
     else:
         password = click.prompt('Password?', hide_input=True)
         user = User()
+        user.token = secrets.token_hex(10)
+        print("Your token is: " + user.token)
         user.username = username
         user.set_password(password)
         db.session.add(user)
