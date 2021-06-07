@@ -1,6 +1,6 @@
 import telebot
 from flask import render_template, redirect, url_for, request
-from flask_login import logout_user, login_user
+from flask_login import logout_user, login_user, login_required
 
 from app import app, bot
 from app.forms import LoginForm
@@ -8,8 +8,10 @@ from app.models import User
 
 
 @app.route('/')
+@login_required
 def index():
-    return render_template('index.html')
+    users = User.query.all()
+    return render_template('index.html', users=users)
 
 
 @app.route('/telegram', methods=["GET", "POST"])

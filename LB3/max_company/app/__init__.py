@@ -4,6 +4,7 @@ from flask_debugtoolbar import DebugToolbarExtension
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from telebot import apihelper
 
 from config import Config
 
@@ -14,6 +15,7 @@ login = LoginManager(app)
 login.login_view = 'login'
 db = SQLAlchemy(app)
 migrate = Migrate(app, db, render_as_batch=True)
-bot = telebot.TeleBot(app.config.get('TELEGRAM_BOT'), threaded=False)
 
+apihelper.ENABLE_MIDDLEWARE = True
+bot = telebot.TeleBot(app.config.get('TELEGRAM_BOT'), threaded=False)
 from app import routes, logger, models, commands, telegram

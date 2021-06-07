@@ -2,7 +2,9 @@ import logging
 import os
 from logging.handlers import RotatingFileHandler
 
-from app import app
+import telebot
+
+from app import app, bot
 
 if not os.path.exists('var/log'):
     os.makedirs('var/log')
@@ -16,5 +18,7 @@ app.logger.addHandler(file_handler)
 
 if app.debug:
     app.logger.setLevel(logging.DEBUG)
+    telebot.logger.setLevel(logging.DEBUG)
 else:
     app.logger.setLevel(logging.ERROR)
+    telebot.logger.setLevel(logging.ERROR)

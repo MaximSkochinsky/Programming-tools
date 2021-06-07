@@ -1,9 +1,53 @@
 import click
-import secrets
+from faker import Faker
 from flask.cli import AppGroup
 
 from app import app, db, bot
-from app.models import User
+from app.models import User, Client
+
+fake = Faker()
+
+fixtures_cli = AppGroup('fixtures')
+
+
+@fixtures_cli.command('load')
+def fixtures_load():
+    User.query.delete()
+
+    users = [
+        {
+            'full_name': 'Максим Скочинский',
+            'email': 'example@gmail.com',
+            'role': User.ROLE_MANAGER,
+            'username': 'max',
+            'password': 'admin'
+        }
+    ]
+
+    for user in users:
+        manager = User()
+        manager.full_name = user.get('full_name')
+        manager.email = user.get('email')
+        manager.role = user.get('role')
+        manager.username = user.get('username')
+        manager.set_password(user.get('password'))
+        manager.generate_token()
+        db.session.add(manager)
+
+        for i in range(10):
+            client = Client()
+            client.full_name = fake.name()
+            client.user = manager
+            client.organization_name = fake.company()
+            client.address = fake.address()
+            client.phone_number = fake.phone_number()
+            db.session.add(client)
+
+    db.session.commit()
+    pass
+
+
+app.cli.add_command(fixtures_cli)
 
 users_cli = AppGroup('user', short_help='Control app users')
 
@@ -21,10 +65,9 @@ def create_user():
     else:
         password = click.prompt('Password?', hide_input=True)
         user = User()
-        user.token = secrets.token_hex(10)
-        print("Your token is: " + user.token)
         user.username = username
         user.set_password(password)
+        user.generate_token()
         db.session.add(user)
         db.session.commit()
 
