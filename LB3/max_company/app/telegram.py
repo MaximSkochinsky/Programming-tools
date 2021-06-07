@@ -1,4 +1,5 @@
 import datetime
+import json
 
 from sqlalchemy.orm.attributes import flag_modified
 from telebot import types
@@ -62,7 +63,7 @@ def client_info(message):
         client = Client.query.filter_by(full_name=client_name[0], organization_name=client_name[1]).first()
         if client:
             telegram_user.state = 'client_show'
-            telegram_user.state_data = {'client_id': client.id}
+            telegram_user.state_data = json.dumps({'client_id': client.id})
             db.session.commit()
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
             markup.add(types.InlineKeyboardButton('Назад к списку клиентов'))
@@ -96,7 +97,8 @@ def client_meeting_show(message):
             markup.add(types.InlineKeyboardButton('Назад к клиенту'))
             markup.add(types.InlineKeyboardButton('Создать встречу'))
             db.session.commit()
-            client = Client.query.get(telegram_user.state_data.get('client_id'))
+            state_data = json.loads(telegram_user.state_data)
+            client = Client.query.get(state_data['client_id'])
             meetings = Meeting.query.filter_by(client=client, user=telegram_user.user).all()
             if len(meetings) == 0:
                 bot.send_message(message.chat.id,
@@ -111,16 +113,20 @@ def client_meeting_create(message):
     telegram_user = TelegramUser.query.get(message.from_user.id)
 
     if telegram_user is not None or telegram_user.user is not None:
-        client = Client.query.get(telegram_user.state_data.get('client_id'))
+        state_data = json.loads(telegram_user.state_data)
+
+        client = Client.query.get(state_data['client_id'])
         telegram_user = TelegramUser.query.get(message.from_user.id)
         if telegram_user is not None:
             now = datetime.datetime.now()
             chat_id = message.chat.id
             date = (now.year, now.month)
             telegram_user.state = 'calendar'
-            telegram_user.state_data['calendar'] = {}
-            telegram_user.state_data['meeting'] = {}
-            telegram_user.state_data['calendar'][str(chat_id)] = date
+
+            state_data['calendar'] = {}
+            state_data['meeting'] = {}
+            state_data['calendar'][str(chat_id)] = date
+            telegram_user.state_data = json.dumps(state_data)
             flag_modified(telegram_user, 'state_data')
             db.session.commit()
             markup = create_calendar(now.year, now.month)
@@ -132,12 +138,13 @@ def handle_day_query(call):
     chat_id = call.message.chat.id
     telegram_user = TelegramUser.query.get(chat_id)
     if telegram_user is not None:
-        saved_date = telegram_user.state_data['calendar'][str(chat_id)]
+        state_data = json.loads(telegram_user.state_data)
+        saved_date = state_data['calendar'][str(chat_id)]
         last_sep = call.data.rfind(';') + 1
         if saved_date is not None:
             day = call.data[last_sep:]
             date = datetime.datetime(int(saved_date[0]), int(saved_date[1]), int(day), 0, 0, 0)
-            telegram_user.state_data['meeting']['date'] = date
+            state_data['meeting']['date'] = date
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
             markup.add(types.InlineKeyboardButton('По адресу клиента'))
             bot.send_message(chat_id=chat_id, text='Укажите место встречи', reply_markup=markup)
@@ -153,11 +160,13 @@ def handle_day_query(call):
 def handle_meeting_place(message):
     telegram_user = TelegramUser.query.get(message.chat.id)
     if telegram_user is not None:
+        state_data = json.loads(telegram_user.state_data)
+        client = Client.query.get(state_data['client_id'])
         if message.text == 'По адресу клиента':
-            client = Client.query.get(telegram_user.state_data.get('client_id'))
-            telegram_user.state_data['meeting']['place'] = client.address
+            state_data['meeting']['place'] = client.address
         else:
-            telegram_user.state_data['meeting']['place'] = message.text
+            state_data['meeting']['place'] = message.text
+        telegram_user.state_data = json.dumps(state_data)
         flag_modified(telegram_user, 'state_data')
         db.session.commit()
 
@@ -168,16 +177,25 @@ def handle_meeting_place(message):
 def handle_meeting_goal(message):
     telegram_user = TelegramUser.query.get(message.chat.id)
     if telegram_user is not None:
-        client = Client.query.get(telegram_user.state_data.get('client_id'))
+        state_data = json.loads(telegram_user.state_data)
+        client = Client.query.get(state_data['client_id'])
         meeting = Meeting()
-        meeting.address = telegram_user.state_data['meeting']['place']
+        meeting.address = state_data['meeting']['place']
         meeting.goal = message.text
         meeting.user = telegram_user.user
         meeting.client = client
         db.session.add(meeting)
         telegram_user.state = 'client_show'
         db.session.commit()
-        client_meeting_show(message)
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        markup.add(types.InlineKeyboardButton('Назад к клиенту'))
+        markup.add(types.InlineKeyboardButton('Создать встречу'))
+        db.session.commit()
+        meetings = Meeting.query.filter_by(client=client, user=telegram_user.user).all()
+        if len(meetings) == 0:
+            bot.send_message(message.chat.id,
+                             'Не назначено ни одной встречи с клиентом {0}'.format(client.full_name),
+                             reply_markup=markup)
     else:
         bot.send_message(message.chat.id, 'no user')
 

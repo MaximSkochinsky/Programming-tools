@@ -24,7 +24,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(255), index=True, unique=True)
     password_hash = db.Column(db.String(255))
     telegram_users = db.relationship('TelegramUser', backref='user', lazy='dynamic')
-    token = db.Column(db.String)
+    token = db.Column(db.String(255))
     meetings = db.relationship('Meeting', backref='user', lazy='dynamic')
     clients = db.relationship('Client', backref='user', lazy='dynamic')
 
@@ -49,7 +49,7 @@ class TelegramUser(db.Model):
     chat_id = db.Column(db.Integer)
     user_id = db.Column(db.Integer, ForeignKey('user.id'))
     state = db.Column(db.String(255))
-    state_data = db.Column(db.JSON)
+    state_data = db.Column(db.TEXT)
 
 
 class Client(db.Model):
