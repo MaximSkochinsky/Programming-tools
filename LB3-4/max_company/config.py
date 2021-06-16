@@ -15,8 +15,7 @@ class Config(object):
 class ProductionConfig(Config):
     ENV = 'production'
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://b0ae353a0b7f70:a46ebb33@us-cdbr-east-03.cleardb.com' \
-                              '/heroku_e307ee4b839f0b0'
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:root@db:3306/app'
 
 
 class TestConfig(Config):

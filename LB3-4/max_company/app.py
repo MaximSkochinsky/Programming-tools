@@ -1,4 +1,5 @@
 from datetime import timedelta, datetime
+from threading import Thread
 
 import click
 import telebot
@@ -83,9 +84,16 @@ def set_webhook(webhook):
 
 @telegram_cli.command('notify')
 def notify():
-    d = datetime.today() - timedelta(hours=1)
-    clients = Client.query.all()
-    for client in clients:
+    client_ids = Client.query.with_entities(Client.id).all()
+    for client_id in client_ids:
+        send = Thread(target=notify_client_handle, args=(client_id,))  # Instantiate a thread,
+        send.start()
+
+
+def notify_client_handle(client_id):
+    with app.app_context():
+        client = Client.query.get(client_id)
+        d = datetime.today() - timedelta(hours=1)
         if client.user and client.user.telegram_user:
             for meeting in client.meetings:
                 if not meeting.notified:
@@ -161,3 +169,6 @@ def fixtures_load():
 
 
 app.cli.add_command(fixtures_cli)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
